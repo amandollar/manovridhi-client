@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.removeItem('accessToken');
               localStorage.removeItem('userData');
             }
-          } catch (error) {
+          } catch {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('userData');
           }
@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string, userType?: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,16 +98,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password, userType }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('accessToken', data.tokens.accessToken);
-        localStorage.setItem('userData', JSON.stringify(data.user));
-        setUser(data.user);
-        return true;
-      } else {
-        throw new Error(data.message || 'Login failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+        console.error('Login failed:', errorData.message);
+        return false;
       }
+
+      const data = await response.json();
+      localStorage.setItem('accessToken', data.tokens.accessToken);
+      localStorage.setItem('userData', JSON.stringify(data.user));
+      setUser(data.user);
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -119,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (userData: SignupData): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/auth/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,14 +128,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Auto-login after successful signup
-        return await login(userData.email, userData.password, userData.userType);
-      } else {
-        throw new Error(data.message || 'Signup failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+        console.error('Signup failed:', errorData.message);
+        return false;
       }
+
+      await response.json();
+      // Auto-login after successful signup
+      return await login(userData.email, userData.password, userData.userType);
     } catch (error) {
       console.error('Signup error:', error);
       return false;

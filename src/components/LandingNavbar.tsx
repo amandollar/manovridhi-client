@@ -43,25 +43,6 @@ export default function LandingNavbar() {
             >
               About
             </Link>
-            <Link 
-              href="/home" 
-              className="text-slate-600 hover:text-emerald-600 font-medium transition-colors"
-            >
-              Blog
-            </Link>
-            <Link 
-              href="/connect" 
-              className="text-slate-600 hover:text-emerald-600 font-medium transition-colors"
-            >
-              Connect
-            </Link>
-            <Link 
-              href="/test" 
-              className="text-slate-600 hover:text-emerald-600 font-medium transition-colors"
-            >
-              Test
-            </Link>
-            
             {/* Get Started Button */}
             <Link 
               href="/login"
