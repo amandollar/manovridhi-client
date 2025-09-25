@@ -1,8 +1,10 @@
 import ChatInterface from '@/components/ChatInterface';
+import Navbar from '@/components/Navbar';
 
 export default function CommunityPage() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Community</h1>

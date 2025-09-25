@@ -1,56 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import Navbar from '@/components/Navbar';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <nav className="bg-white/98 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-md">
-                <span className="text-white font-bold text-xl">M</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Manovridhi</h1>
-                <p className="text-xs text-gray-500 -mt-1">Mental Health Platform</p>
-              </div>
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <a href="#features" className="text-gray-700 hover:text-emerald-600 transition-all duration-300 font-medium relative group cursor-pointer py-2">
-                Features
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-300 group-hover:w-full"></span>
-              </a>
-              <a href="#about" className="text-gray-700 hover:text-emerald-600 transition-all duration-300 font-medium relative group cursor-pointer py-2">
-                About
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-300 group-hover:w-full"></span>
-              </a>
-              <Link href="/community" className="text-gray-700 hover:text-emerald-600 transition-all duration-300 font-medium relative group py-2">
-                Community
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <a href="#contact" className="text-gray-700 hover:text-emerald-600 transition-all duration-300 font-medium relative group cursor-pointer py-2">
-                Contact
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-300 group-hover:w-full"></span>
-              </a>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/community" 
-                className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-2.5 rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 font-semibold text-sm shadow-md hover:shadow-lg"
-              >
-                Join Now
-              </Link>
-              <button className="md:hidden p-2 text-gray-600 hover:text-emerald-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 py-20 lg:py-28 overflow-hidden">
@@ -547,7 +502,7 @@ export default function HomePage() {
                 <Link href="/community" className="block text-gray-400 hover:text-emerald-400 transition-colors hover:translate-x-1 transform duration-300">Community</Link>
                 <a href="#features" className="block text-gray-400 hover:text-emerald-400 transition-colors hover:translate-x-1 transform duration-300 cursor-pointer">Features</a>
                 <a href="#about" className="block text-gray-400 hover:text-emerald-400 transition-colors hover:translate-x-1 transform duration-300 cursor-pointer">About</a>
-                <Link href="/blog" className="block text-gray-400 hover:text-emerald-400 transition-colors hover:translate-x-1 transform duration-300">Blog</Link>
+                <Link href="/home" className="block text-gray-400 hover:text-emerald-400 transition-colors hover:translate-x-1 transform duration-300">Blog</Link>
               </div>
             </div>
             <div>
