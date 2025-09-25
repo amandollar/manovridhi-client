@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Chatbot from '@/components/Chatbot'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: 'Manovridhi - Mental Health Support',
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
-        <Chatbot />
+        <AuthProvider>
+          {children}
+          <Chatbot />
+        </AuthProvider>
       </body>
     </html>
   )
