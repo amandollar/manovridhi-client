@@ -25,10 +25,33 @@ interface Comment {
   updatedAt: string;
 }
 
+interface Appointment {
+  _id: string;
+  counsellor: {
+    _id: string;
+    name: string;
+    email: string;
+    specialization: string;
+  };
+  date: string;
+  time: string;
+  duration: number;
+  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';
+  sessionType: 'video' | 'audio' | 'chat' | 'in-person';
+  notes?: string;
+  counsellorNotes?: string;
+  rejectionReason?: string;
+  meetingLink?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
 
@@ -56,10 +79,30 @@ export default function DashboardPage() {
     }
   }, [user?.email]);
 
+  const fetchUserAppointments = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/appointments/user`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAppointments(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  }, []);
+
 
   useEffect(() => {
     fetchUserPosts();
-  }, [fetchUserPosts]);
+    fetchUserAppointments();
+  }, [fetchUserPosts, fetchUserAppointments]);
 
   const createPost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +183,23 @@ export default function DashboardPage() {
     setEditingPost(null);
     setPostForm({ title: '', description: '', content: '' });
     setShowCreatePost(false);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (loading) {
@@ -239,6 +299,90 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Appointments Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Your Appointments</h2>
+          </div>
+
+          {appointmentsLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading appointments...</p>
+            </div>
+          ) : appointments.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments yet</h3>
+              <p className="text-gray-500 mb-4">Book an appointment with a counsellor to get started!</p>
+              <Link
+                href="/connect"
+                className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors inline-block"
+              >
+                Book Appointment
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {appointments.map((appointment) => (
+                <div key={appointment._id} className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">{appointment.counsellor.name}</h3>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
+                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{appointment.counsellor.specialization}</p>
+                      <div className="text-sm text-gray-500 mb-3">
+                        <span>{new Date(appointment.date).toLocaleDateString()} at {appointment.time}</span>
+                        <span className="mx-2">•</span>
+                        <span>{appointment.duration} minutes</span>
+                        <span className="mx-2">•</span>
+                        <span className="capitalize">{appointment.sessionType} session</span>
+                      </div>
+                      {appointment.notes && (
+                        <p className="text-sm text-gray-700 mb-2">
+                          <span className="font-medium">Your notes:</span> {appointment.notes}
+                        </p>
+                      )}
+                      {appointment.counsellorNotes && (
+                        <p className="text-sm text-gray-700 mb-2">
+                          <span className="font-medium">Counsellor notes:</span> {appointment.counsellorNotes}
+                        </p>
+                      )}
+                      {appointment.rejectionReason && (
+                        <p className="text-sm text-red-600 mb-2">
+                          <span className="font-medium">Rejection reason:</span> {appointment.rejectionReason}
+                        </p>
+                      )}
+                      {appointment.meetingLink && appointment.status === 'approved' && (
+                        <div className="mt-3">
+                          <a
+                            href={appointment.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Join Meeting
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Posts List */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">

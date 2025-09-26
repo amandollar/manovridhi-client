@@ -90,6 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string, userType?: string): Promise<boolean> => {
     try {
       setLoading(true);
+      console.log('Attempting login with:', { email, userType });
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -98,6 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password, userType }),
       });
 
+      console.log('Login response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Network error' }));
         console.error('Login failed:', errorData.message);
@@ -105,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const data = await response.json();
+      console.log('Login successful:', data);
       localStorage.setItem('accessToken', data.tokens.accessToken);
       localStorage.setItem('userData', JSON.stringify(data.user));
       setUser(data.user);
@@ -120,21 +125,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (userData: SignupData): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/register`, {
+      
+      // Determine the correct API endpoint based on user type
+      const isCounsellor = userData.userType === 'counsellor';
+      const apiEndpoint = isCounsellor 
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/counsellors/register`
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/register`;
+
+      // Prepare data for backend - different fields for users vs counsellors
+      interface SignupPayload {
+        name: string;
+        email: string;
+        password: string;
+        phone: string | null;
+        role?: string;
+        portfolio?: string;
+        degree?: string;
+      }
+      
+      let signupPayload: SignupPayload = {
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone || null,
+      };
+
+      if (isCounsellor) {
+        // Counsellor-specific fields - portfolio is required
+        if (!userData.specialization) {
+          console.error('Specialization is required for counsellor signup');
+          return false;
+        }
+        
+        // Map degree to valid enum value - use the actual enum value
+        // The enum value for Others is "others" (lowercase)
+        const degreeValue = userData.degree && userData.degree.trim() !== '' 
+          ? userData.degree 
+          : 'others';
+        
+        signupPayload = {
+          ...signupPayload,
+          portfolio: userData.specialization, // Portfolio is required
+          degree: degreeValue, // Map degree field to valid enum value
+          role: 'counsellor' // Match backend enum value
+        };
+      } else {
+        // User-specific fields
+        signupPayload = {
+          ...signupPayload,
+          role: 'user' // Match backend enum value
+        };
+      }
+
+      console.log('Signup payload:', signupPayload);
+      console.log('API endpoint:', apiEndpoint);
+      console.log('Degree value being sent:', signupPayload.degree);
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(signupPayload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Network error' }));
-        console.error('Signup failed:', errorData.message);
+        const errorData = await response.json().catch(() => ({ message: 'Network error' })) as { message: string; errors?: Array<{ path?: string[]; message: string }> };
+        console.error('Signup failed:', errorData);
+        
+        // Show more detailed error information
+              if (errorData.errors && Array.isArray(errorData.errors)) {
+                const errorMessages = errorData.errors.map((err: { path?: string[]; message: string }) => `${err.path?.join('.')}: ${err.message}`).join(', ');
+                console.error('Validation errors:', errorMessages);
+              }
+        
         return false;
       }
 
-      await response.json();
+      const result = await response.json();
+      console.log('Signup successful:', result);
+      
       // Auto-login after successful signup
       return await login(userData.email, userData.password, userData.userType);
     } catch (error) {

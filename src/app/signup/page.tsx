@@ -210,15 +210,26 @@ export default function SignupPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900 placeholder-gray-400"
                     placeholder="Years of experience"
                   />
-                  <input
+                  <select
                     id="degree"
                     name="degree"
-                    type="text"
                     value={formData.degree}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900 placeholder-gray-400"
-                    placeholder="Degree/Qualification"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900"
+                    required
+                  >
+                    <option value="">Select your degree/qualification</option>
+                    <option value="Bachelor of Arts/Science in Psychology">Bachelor of Arts/Science in Psychology</option>
+                    <option value="Master of Arts/Science in Psychology">Master of Arts/Science in Psychology</option>
+                    <option value="Master of Philosophy in Psychology">Master of Philosophy in Psychology</option>
+                    <option value="Doctor of Psychology">Doctor of Psychology</option>
+                    <option value="Doctor of Philosophy in Psychology">Doctor of Philosophy in Psychology</option>
+                    <option value="Doctor of Education in Psychology">Doctor of Education in Psychology</option>
+                    <option value="Diploma in Counseling Psychology">Diploma in Counseling Psychology</option>
+                    <option value="MPhil in Clinical Psychology (India specific)">MPhil in Clinical Psychology (India specific)</option>
+                    <option value="Certification in a specialized area (e.g., CBT, Neuropsychology)">Certification in a specialized area (e.g., CBT, Neuropsychology)</option>
+                    <option value="others">Others</option>
+                  </select>
                   <input
                     id="license"
                     name="license"

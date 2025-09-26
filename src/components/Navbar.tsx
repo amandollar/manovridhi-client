@@ -71,6 +71,30 @@ export default function Navbar() {
             >
               Tests
             </Link>
+            
+            <Link 
+              href="/connect" 
+              className={`px-3 py-2 text-sm font-medium ${
+                pathname === '/connect' 
+                  ? 'text-emerald-600 border-b-2 border-emerald-600' 
+                  : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Connect
+            </Link>
+
+            {user?.role === 'counsellor' && (
+              <Link 
+                href="/counsellor-dashboard" 
+                className={`px-3 py-2 text-sm font-medium ${
+                  pathname === '/counsellor-dashboard' 
+                    ? 'text-emerald-600 border-b-2 border-emerald-600' 
+                    : 'text-gray-700 hover:text-emerald-600'
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
 
             {/* User Menu */}
             {isAuthenticated && user ? (
@@ -194,6 +218,32 @@ export default function Navbar() {
               >
                 Tests
               </Link>
+              
+              <Link 
+                href="/connect" 
+                onClick={closeMenu}
+                className={`block px-3 py-2 text-base font-medium ${
+                  pathname === '/connect' 
+                    ? 'text-emerald-600 bg-emerald-50' 
+                    : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-50'
+                }`}
+              >
+                Connect
+              </Link>
+
+              {user?.role === 'counsellor' && (
+                <Link 
+                  href="/counsellor-dashboard" 
+                  onClick={closeMenu}
+                  className={`block px-3 py-2 text-base font-medium ${
+                    pathname === '/counsellor-dashboard' 
+                      ? 'text-emerald-600 bg-emerald-50' 
+                      : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+              )}
 
               {/* Auth Actions */}
               {isAuthenticated ? (

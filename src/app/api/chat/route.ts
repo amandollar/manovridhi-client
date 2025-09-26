@@ -1,36 +1,17 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Initialize Gemini AI with better configuration
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.error('GEMINI_API_KEY is not set in environment variables');
+}
+
+const genAI = new GoogleGenerativeAI(apiKey || '');
 
 // Use a more reliable model with better configuration
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-1.5-flash',
-  generationConfig: {
-    temperature: 0.7,
-    topK: 40,
-    topP: 0.95,
-    maxOutputTokens: 150, // Limit response length for faster responses
-  },
-  safetySettings: [
-    {
-      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-    {
-      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-      threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    },
-  ],
+  model: 'gemini-2.0-flash',
 });
 
 // Optimized system prompt - shorter and more focused
@@ -117,7 +98,26 @@ function buildConversationContext(message: string, conversationHistory: Conversa
   return context;
 }
 
+// Test endpoint to check if API key is working
+export async function GET(): Promise<NextResponse> {
+  if (!apiKey) {
+    return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
+  }
+  
+  try {
+    const testResult = await model.generateContent('Hello, respond with just "API working"');
+    const response = await testResult.response;
+    const text = response.text();
+    return NextResponse.json({ status: 'API working', response: text });
+  } catch (error) {
+    console.error('API test error:', error);
+    return NextResponse.json({ error: 'API test failed', details: error }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  console.log('Chat API POST request received');
+  
   // Set timeout for the entire request
   const timeoutPromise = new Promise<NextResponse>((_, reject) => {
     setTimeout(() => reject(new Error('Request timeout')), 10000); // 10 second timeout
@@ -125,6 +125,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     const requestPromise = (async (): Promise<NextResponse> => {
+      // Check if API key is available
+      if (!apiKey) {
+        console.error('GEMINI_API_KEY not found');
+        return NextResponse.json({
+          response: "I'm sorry, the AI service is not properly configured. Please contact support.",
+          isRedirect: false
+        });
+      }
+
       const { message, conversationHistory = [] } = await request.json();
 
       // Validate input
@@ -144,7 +153,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       // Check if the message is mental health related
-      if (!isMentalHealthRelated(message)) {
+      const isMentalHealth = isMentalHealthRelated(message);
+      console.log('Message:', message);
+      console.log('Is mental health related:', isMentalHealth);
+      
+      if (!isMentalHealth) {
+        console.log('Message not mental health related, returning predefined response');
         return NextResponse.json({
           response: PREDEFINED_RESPONSES.notMentalHealth,
           isRedirect: true
@@ -153,24 +167,58 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       // Build conversation context
       const conversationContext = buildConversationContext(message, conversationHistory);
+      console.log('Conversation context:', conversationContext);
 
       // Generate response with timeout
-      const result = await model.generateContent(conversationContext);
-      const response = await result.response;
-      const text = response.text();
+      console.log('Calling Gemini API...');
+      console.log('API Key present:', !!apiKey);
+      console.log('API Key length:', apiKey ? apiKey.length : 0);
+      
+      try {
+        const result = await model.generateContent(conversationContext);
+        console.log('Gemini API result received');
+        
+        const response = await result.response;
+        console.log('Gemini API response object received');
+        
+        const text = response.text();
+        console.log('Gemini API response text:', text);
 
-      // Validate response
-      if (!text || text.trim().length === 0) {
+        // Validate response
+        if (!text || text.trim().length === 0) {
+          console.log('Empty response from Gemini API');
+          return NextResponse.json({
+            response: PREDEFINED_RESPONSES.error,
+            isRedirect: false
+          });
+        }
+
+        console.log('Returning successful response');
         return NextResponse.json({
-          response: PREDEFINED_RESPONSES.error,
+          response: text.trim(),
+          isRedirect: false
+        });
+      } catch (geminiError: unknown) {
+        console.error('Gemini API error details:', geminiError);
+        console.error('Error message:', geminiError instanceof Error ? geminiError.message : 'Unknown error');
+        console.error('Error stack:', geminiError instanceof Error ? geminiError.stack : 'No stack trace');
+        
+        // Return more specific error message
+        let errorMessage = PREDEFINED_RESPONSES.error;
+        const errorMessageStr = geminiError instanceof Error ? geminiError.message : String(geminiError);
+        if (errorMessageStr.includes('API key')) {
+          errorMessage = "API key issue detected. Please check configuration.";
+        } else if (errorMessageStr.includes('quota')) {
+          errorMessage = "API quota exceeded. Please try again later.";
+        } else if (errorMessageStr.includes('permission')) {
+          errorMessage = "API permission denied. Please check access rights.";
+        }
+        
+        return NextResponse.json({
+          response: errorMessage,
           isRedirect: false
         });
       }
-
-      return NextResponse.json({
-        response: text.trim(),
-        isRedirect: false
-      });
     })();
 
     // Race between the request and timeout

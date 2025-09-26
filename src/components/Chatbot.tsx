@@ -61,7 +61,28 @@ export default function Chatbot() {
       });
 
       const data = await response.json();
-      console.log(data)
+
+      if (data.error) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.error || "I'm sorry, I encountered an error. Please try again.",
+          role: 'assistant',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        return;
+      }
+
+      if (!data.response) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "I'm sorry, I didn't receive a proper response. Please try again.",
+          role: 'assistant',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        return;
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -91,6 +112,7 @@ export default function Chatbot() {
       sendMessage();
     }
   };
+
 
   return (
     <>
