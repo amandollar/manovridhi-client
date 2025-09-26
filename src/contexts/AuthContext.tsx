@@ -19,6 +19,8 @@ interface AuthContextType {
   signup: (userData: SignupData) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  validateToken: () => boolean;
+  getValidToken: () => string | null;
 }
 
 interface SignupData {
@@ -67,18 +69,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const user = JSON.parse(userData);
               setUser(user);
             } else {
+              console.log('Token expired, clearing auth data');
               localStorage.removeItem('accessToken');
               localStorage.removeItem('userData');
+              setUser(null);
             }
-          } catch {
+          } catch (error) {
+            console.log('Invalid token format, clearing auth data');
             localStorage.removeItem('accessToken');
             localStorage.removeItem('userData');
+            setUser(null);
           }
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userData');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -222,6 +231,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     router.push('/');
   };
 
+  const validateToken = (): boolean => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return false;
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      
+      if (payload.exp && payload.exp > currentTime) {
+        return true;
+      } else {
+        console.log('Token expired during validation');
+        logout();
+        return false;
+      }
+    } catch (error) {
+      console.log('Invalid token during validation');
+      logout();
+      return false;
+    }
+  };
+
+  const getValidToken = (): string | null => {
+    if (validateToken()) {
+      return localStorage.getItem('accessToken');
+    }
+    return null;
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -229,6 +267,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup,
     logout,
     isAuthenticated: !!user,
+    validateToken,
+    getValidToken
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

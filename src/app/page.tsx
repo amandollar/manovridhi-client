@@ -1,8 +1,12 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
 import LandingNavbar from '@/components/LandingNavbar';
 
 export default function HomePage() {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-white">
       <LandingNavbar />
@@ -169,10 +173,9 @@ export default function HomePage() {
                     <h3 className="text-2xl font-bold text-slate-900">AI Assistant</h3>
                   </div>
                   <p className="text-slate-600 leading-relaxed text-base">Engage in supportive conversations with our intelligent AI chatbot, available 24/7 for immediate mental health assistance and personalized insights.</p>
-                  <Link href="/chatbot" className="inline-flex items-center text-emerald-600 font-semibold hover:text-emerald-700 group-hover:translate-x-2 transition-all duration-300 text-base">
-                    Start Conversation
-                    <span className="ml-2 group-hover:translate-x-1 transition-transform duration-300">→</span>
-                  </Link>
+                  <div className="inline-flex items-center text-emerald-600 font-semibold text-base">
+                    AI Chatbot Available
+                  </div>
                 </div>
               </div>
             </div>
@@ -230,7 +233,10 @@ export default function HomePage() {
                     <h3 className="text-2xl font-bold text-slate-900">Assessments</h3>
                   </div>
                   <p className="text-slate-600 leading-relaxed text-base">Take comprehensive mental health assessments and track your progress with detailed insights and personalized recommendations.</p>
-                  <Link href="/test" className="inline-flex items-center text-emerald-600 font-semibold hover:text-emerald-700 group-hover:translate-x-2 transition-all duration-300 text-base">
+                  <Link 
+                    href={isAuthenticated ? "/test" : "/login"} 
+                    className="inline-flex items-center text-emerald-600 font-semibold hover:text-emerald-700 group-hover:translate-x-2 transition-all duration-300 text-base"
+                  >
                     Take Assessment
                     <span className="ml-2 group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </Link>
@@ -285,10 +291,9 @@ export default function HomePage() {
                     <h3 className="text-2xl font-bold text-slate-900">Crisis Support</h3>
                   </div>
                   <p className="text-slate-600 leading-relaxed text-base">24/7 crisis support and emergency resources when you need immediate help and professional intervention.</p>
-                  <Link href="/emergency" className="inline-flex items-center text-red-600 font-semibold hover:text-red-700 group-hover:translate-x-2 transition-all duration-300 text-base">
-                    Get Help Now
-                    <span className="ml-2 group-hover:translate-x-1 transition-transform duration-300">→</span>
-                  </Link>
+                  <div className="inline-flex items-center text-red-600 font-semibold text-base">
+                    Crisis Support Available
+                  </div>
                 </div>
               </div>
             </div>

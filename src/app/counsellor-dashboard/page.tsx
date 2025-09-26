@@ -56,7 +56,7 @@ export default function CounsellorDashboard() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, getValidToken } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'counsellor') {
@@ -115,7 +115,12 @@ export default function CounsellorDashboard() {
 
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = getValidToken();
+      if (!token) {
+        alert('Your session has expired. Please log in again.');
+        return;
+      }
+
       const updateData: { status: string; counsellorNotes?: string; rejectionReason?: string; meetingLink?: string } = {
         status: actionType === 'approve' ? 'approved' : actionType === 'reject' ? 'rejected' : 'completed'
       };
@@ -151,7 +156,11 @@ export default function CounsellorDashboard() {
         setRejectionReason('');
         setMeetingLink('');
       } else {
-        alert('Failed to update appointment. Please try again.');
+        if (data.message && data.message.includes('token')) {
+          alert('Your session has expired. Please log in again.');
+        } else {
+          alert('Failed to update appointment. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error updating appointment:', error);

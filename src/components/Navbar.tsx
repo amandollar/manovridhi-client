@@ -34,7 +34,9 @@ export default function Navbar() {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-emerald-600">Manovridhi</h1>
+            <Link href="http://localhost:3000/" className="text-xl font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200">
+              Manovridhi
+            </Link>
           </div>
           
           {/* Desktop Menu */}
@@ -81,6 +83,17 @@ export default function Navbar() {
               }`}
             >
               Connect
+            </Link>
+            
+            <Link 
+              href="/relaxation" 
+              className={`px-3 py-2 text-sm font-medium ${
+                pathname === '/relaxation' 
+                  ? 'text-emerald-600 border-b-2 border-emerald-600' 
+                  : 'text-gray-700 hover:text-emerald-600'
+              }`}
+            >
+              Relaxation
             </Link>
 
             {user?.role === 'counsellor' && (
@@ -229,6 +242,18 @@ export default function Navbar() {
                 }`}
               >
                 Connect
+              </Link>
+              
+              <Link 
+                href="/relaxation" 
+                onClick={closeMenu}
+                className={`block px-3 py-2 text-base font-medium ${
+                  pathname === '/relaxation' 
+                    ? 'text-emerald-600 bg-emerald-50' 
+                    : 'text-gray-700 hover:text-emerald-600 hover:bg-gray-50'
+                }`}
+              >
+                Relaxation
               </Link>
 
               {user?.role === 'counsellor' && (

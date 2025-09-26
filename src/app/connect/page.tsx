@@ -41,7 +41,7 @@ export default function ConnectPage() {
   });
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, getValidToken } = useAuth();
 
   const categories = [
     { id: 'all', name: 'All Counsellors', count: counsellors.length },
@@ -133,13 +133,21 @@ export default function ConnectPage() {
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) {
+      alert('Please log in to book an appointment.');
+      return;
+    }
 
     setBookingLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = getValidToken();
+      if (!token) {
+        alert('Your session has expired. Please log in again.');
+        return;
+      }
+
       console.log('Booking appointment with data:', bookingData);
-      console.log('Using token:', token ? 'Present' : 'Missing');
+      console.log('Using valid token');
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/appointments`, {
         method: 'POST',
@@ -170,7 +178,11 @@ export default function ConnectPage() {
         });
       } else {
         console.error('Appointment booking failed:', data);
-        alert(`Failed to book appointment: ${data.message || 'Please try again.'}`);
+        if (data.message && data.message.includes('token')) {
+          alert('Your session has expired. Please log in again.');
+        } else {
+          alert(`Failed to book appointment: ${data.message || 'Please try again.'}`);
+        }
       }
     } catch (error) {
       console.error('Error booking appointment:', error);
